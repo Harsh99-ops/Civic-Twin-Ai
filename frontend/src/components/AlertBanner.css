@@ -1,0 +1,59 @@
+.alertbanner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  font-size: 13px;
+  color: #fecaca;
+  background: linear-gradient(90deg, #4c1414, #3a1010);
+  border-bottom: 1px solid rgba(248, 81, 73, 0.35);
+}
+
+.alertbanner[data-severity="HIGH"] {
+  background: linear-gradient(90deg, #5c1414, #3a1010);
+}
+
+.alertbanner__icon {
+  color: #f87171;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.alertbanner__text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.alertbanner__text strong {
+  color: #fff;
+}
+
+.alertbanner__badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.alertbanner__close {
+  background: none;
+  border: none;
+  color: #fecaca;
+  display: flex;
+  padding: 2px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+.alertbanner__close:hover {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .alertbanner__text {
+    font-size: 12px;
+  }
+}

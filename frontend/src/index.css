@@ -1,0 +1,134 @@
+:root {
+  /* Surfaces */
+  --bg-app: #080b11;
+  --bg-panel: #0e131c;
+  --bg-panel-raised: #131a26;
+  --bg-inset: #0a0e15;
+  --border: #1e2733;
+  --border-soft: #171f2b;
+
+  /* Text */
+  --text-primary: #e8ecf3;
+  --text-secondary: #8b96a8;
+  --text-tertiary: #5c6779;
+
+  /* Brand */
+  --brand: #2dd4bf;
+  --brand-dim: #14b8a6;
+  --brand-glow: rgba(45, 212, 191, 0.18);
+
+  /* Severity scale */
+  --sev-low: #3fb950;
+  --sev-medium: #d4a72c;
+  --sev-high: #f0883e;
+  --sev-critical: #f85149;
+
+  /* Road authority */
+  --road-nhai: #60a5fa;
+  --road-state: #c084fc;
+
+  /* Utility */
+  --danger: #f85149;
+  --danger-bg: rgba(248, 81, 73, 0.12);
+  --warning: #d4a72c;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg-app);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(45, 212, 191, 0.05), transparent 42%),
+    radial-gradient(circle at 90% 0%, rgba(96, 165, 250, 0.04), transparent 40%);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+p {
+  margin: 0;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: var(--brand-glow);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

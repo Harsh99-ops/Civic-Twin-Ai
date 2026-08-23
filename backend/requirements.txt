@@ -1,0 +1,20 @@
+# Core API
+fastapi==0.115.0
+uvicorn==0.30.6
+python-multipart==0.0.9
+pydantic==2.9.2
+
+# Data / risk & budget engines
+pandas==2.2.2
+numpy==1.26.4
+
+# Defect detection
+pillow==10.4.0
+opencv-python-headless==4.10.0.84  # heuristic CV fallback, used only if the ML stack below is unavailable
+
+# Real trained pothole model (backend/models/best.pt) — this is the
+# primary detection path. Large install (pulls in torch); if you can't
+# install these in your environment, just leave them out — the app
+# still runs fully via the OpenCV fallback in defect_detection.py.
+ultralytics==8.3.0
+torch==2.4.1
