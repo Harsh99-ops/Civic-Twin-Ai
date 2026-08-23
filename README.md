@@ -1,5 +1,5 @@
 # CIVIC-TWIN AI
-
+# SIH PROJECT
 A civic infrastructure reporting platform: citizens photograph and geotag
 issues (potholes, waterlogging, streetlight faults, waste), an AI pipeline
 detects and scores severity, duplicate reports of the same defect get
