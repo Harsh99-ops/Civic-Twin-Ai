@@ -18,3 +18,9 @@ opencv-python-headless==4.10.0.84  # heuristic CV fallback, used only if the ML 
 # still runs fully via the OpenCV fallback in defect_detection.py.
 ultralytics==8.3.0
 torch==2.4.1
+
+# Chat assistant (real Claude API calls with tool use over live GIS data)
+anthropic==0.40.0
+
+# API key loading for the chat assistant (.env support)
+python-dotenv==1.0.1

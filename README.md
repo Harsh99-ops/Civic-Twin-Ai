@@ -1,5 +1,5 @@
 # CIVIC-TWIN AI
-# SIH PROJECT
+
 A civic infrastructure reporting platform: citizens photograph and geotag
 issues (potholes, waterlogging, streetlight faults, waste), an AI pipeline
 detects and scores severity, duplicate reports of the same defect get
@@ -54,7 +54,8 @@ citizen photo + GPS + category
   which authority would actually pay for the repair.
 - **New:** a real trained pothole-detection model (`backend/models/best.pt`)
   wired in with a 40% confidence validation gate, and a floating chat
-  assistant that checks a travel route for reported issues.
+  assistant backed by a real Claude API call with tool access to the
+  live GIS data (not a hardcoded/regex parser).
 - All five original modules' separate servers/ports were merged into
   **one FastAPI service** — much simpler to run for a demo.
 
@@ -98,6 +99,7 @@ frontend/
 cd backend
 python3 -m venv venv && source venv/bin/activate   # optional but recommended
 pip install -r requirements.txt
+cp .env.example .env   # then paste your ANTHROPIC_API_KEY in .env (needed for the chat assistant only)
 uvicorn main:app --reload --port 8000
 ```
 
@@ -152,20 +154,44 @@ pothole. Adjust the threshold via `MIN_POTHOLE_CONFIDENCE` in
 
 ## CivicTwin Assistant (chatbot)
 
-A floating chat widget (bottom-right) lets anyone ask things like:
+A floating chat widget (bottom-right) is a **real Claude API integration**
+with tool use — not a hardcoded parser. The model gets four tools that
+query the exact same live data driving the GIS map:
 
-> "from Sector 62 to Sector 18"
-> "between 28.62,77.37 and 28.57,77.33"
+- `check_route(origin, destination)` — reported issues along the
+  straight-line path between two places
+- `search_complaints(category, road_type, min_severity, near, radius_km)`
+  — flexible filtered lookup ("critical waterlogging near Sector 78")
+- `get_stats()` — city-wide aggregate counts
+- `get_risk_zones(top_n)` — the highest-risk zones right now
 
-It resolves each side to coordinates (Noida sector name lookup in
-`modules/sectors.py`, or raw `lat,lon`), checks the straight-line path
-between them for any stored complaint within ~350m (`modules/route_check.py`),
-and replies with a plain-language summary — worst severity found, defect
-type, distance from the route, and how many citizens flagged it. No LLM
-call involved — it's a small deterministic parser (`modules/chat.py`)
-matched to the one job this bot needs to do. Extend
-`modules/sectors.py` with more sector coordinates if you need wider
-coverage.
+It reasons over whatever mix of tools the question needs and always
+grounds its answer in what they return — the system prompt explicitly
+tells it never to invent complaint counts or locations. Ask it anything
+in the scope of the GIS data — routes, area lookups, stats, risk — in
+plain English; it isn't limited to a fixed sentence pattern.
+
+**This is the only LLM call anywhere in the app** — the GIS map, report
+pipeline, risk engine, and budget optimizer are all fully deterministic,
+exactly as before.
+
+**Setup:** get an API key from
+[console.anthropic.com](https://console.anthropic.com/settings/keys),
+then either:
+
+```bash
+cp backend/.env.example backend/.env
+# edit backend/.env and paste your key in ANTHROPIC_API_KEY=
+```
+
+or export it directly: `export ANTHROPIC_API_KEY=sk-ant-...` before
+running uvicorn. Without a key, the chat widget still works but replies
+with a message telling you to set one — it doesn't crash the app.
+
+Location resolution (Noida sector names) uses the lookup table in
+`modules/sectors.py`; extend it with more sectors if you need wider
+coverage — the model will ask for coordinates if it hits an
+unrecognized name rather than guessing.
 
 ## Known simplifications (documented, not hidden)
 

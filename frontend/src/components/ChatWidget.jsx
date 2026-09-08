@@ -4,10 +4,10 @@ import { sendChatMessage } from "../api";
 import "./ChatWidget.css";
 
 const WELCOME = {
-  role: "bot",
-  text:
-    "Hi! I'm the CivicTwin Assistant. Tell me where you're travelling — e.g. " +
-    '"from Sector 62 to Sector 18" — and I\'ll check for reported road issues along the way.',
+  role: "assistant",
+  content:
+    "Hi! I'm the CivicTwin Assistant, connected live to the GIS map data. Ask me things like " +
+    '"is there anything reported from Sector 62 to Sector 18" or "any critical waterlogging near Sector 78?"',
 };
 
 export default function ChatWidget() {
@@ -26,16 +26,21 @@ export default function ChatWidget() {
   async function handleSend() {
     const text = input.trim();
     if (!text || sending) return;
-    setMessages((m) => [...m, { role: "user", text }]);
+    const nextMessages = [...messages, { role: "user", content: text }];
+    setMessages(nextMessages);
     setInput("");
     setSending(true);
     try {
-      const res = await sendChatMessage(text);
-      setMessages((m) => [...m, { role: "bot", text: res.reply, routeResult: res.route_result }]);
+      // Send full history minus the welcome placeholder so the model has
+      // real multi-turn context (the welcome message was never something
+      // the model said, so we drop it rather than confuse the transcript).
+      const history = nextMessages.filter((m) => m !== WELCOME);
+      const res = await sendChatMessage(history);
+      setMessages((m) => [...m, { role: "assistant", content: res.reply, error: res.error }]);
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "bot", text: "Backend is offline. Make sure uvicorn is running on port 8000.", error: true },
+        { role: "assistant", content: "Backend is offline. Make sure uvicorn is running on port 8000.", error: true },
       ]);
     } finally {
       setSending(false);
@@ -70,9 +75,13 @@ export default function ChatWidget() {
 
           <div className="chatwidget__messages" ref={scrollRef}>
             {messages.map((m, i) => (
-              <div key={i} className={`chatwidget__bubble-row chatwidget__bubble-row--${m.role}`}>
-                <div className={`chatwidget__bubble chatwidget__bubble--${m.role} ${m.error ? "chatwidget__bubble--error" : ""}`}>
-                  {m.text}
+              <div key={i} className={`chatwidget__bubble-row chatwidget__bubble-row--${m.role === "user" ? "user" : "bot"}`}>
+                <div
+                  className={`chatwidget__bubble chatwidget__bubble--${m.role === "user" ? "user" : "bot"} ${
+                    m.error ? "chatwidget__bubble--error" : ""
+                  }`}
+                >
+                  {m.content}
                 </div>
               </div>
             ))}

@@ -20,18 +20,9 @@ signal that the problem is affecting more people and deserves higher
 priority.
 """
 
-import math
+from modules.geo_utils import haversine_km
 
 DUPLICATE_RADIUS_KM = 0.12  # ~120 meters
-
-
-def _haversine_km(lat1, lon1, lat2, lon2):
-    r = 6371.0
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dl = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
 def find_duplicate(records: list, lat: float, lon: float, category: str):
@@ -56,7 +47,7 @@ def find_duplicate(records: list, lat: float, lon: float, category: str):
             continue
         if rec.get("complaint_category") != category:
             continue
-        d = _haversine_km(lat, lon, float(rec["latitude"]), float(rec["longitude"]))
+        d = haversine_km(lat, lon, float(rec["latitude"]), float(rec["longitude"]))
         if d <= DUPLICATE_RADIUS_KM and d < best_dist:
             best = rec
             best_dist = d
