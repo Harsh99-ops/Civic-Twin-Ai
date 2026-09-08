@@ -22,7 +22,7 @@ Replace the coordinate lists below with real geometry if you have access
 to it — the classify_road() interface will stay the same.
 """
 
-import math
+from modules.geo_utils import point_to_segment_km
 
 NHAI_BUFFER_KM = 1.0  # how close a point must be to a corridor to count as "on" it
 
@@ -77,47 +77,13 @@ STATE_CORRIDORS = [
 DEFAULT_ROAD_NAME = "Local / Municipal Road"
 
 
-def _haversine_km(lat1, lon1, lat2, lon2):
-    r = 6371.0
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dl = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-
-
-def _point_to_segment_km(lat, lon, lat1, lon1, lat2, lon2):
-    """Approximate distance from a point to a line segment, in km.
-
-    Uses an equirectangular flattening (fine at city scale) rather than
-    true great-circle segment math, which is more than accurate enough
-    for a ~1km classification buffer.
-    """
-    lat0 = math.radians((lat1 + lat2) / 2)
-    kx = 111.32 * math.cos(lat0)  # km per degree longitude at this latitude
-    ky = 110.57  # km per degree latitude
-
-    px, py = lon * kx, lat * ky
-    x1, y1 = lon1 * kx, lat1 * ky
-    x2, y2 = lon2 * kx, lat2 * ky
-
-    dx, dy = x2 - x1, y2 - y1
-    if dx == 0 and dy == 0:
-        return _haversine_km(lat, lon, lat1, lon1)
-
-    t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)
-    t = max(0.0, min(1.0, t))
-    cx, cy = x1 + t * dx, y1 + t * dy
-    return math.hypot(px - cx, py - cy)
-
-
 def _nearest_corridor(lat, lon, corridors):
     best_name, best_dist = None, float("inf")
     for corridor in corridors:
         pts = corridor["points"]
         for i in range(len(pts) - 1):
             (la1, lo1), (la2, lo2) = pts[i], pts[i + 1]
-            d = _point_to_segment_km(lat, lon, la1, lo1, la2, lo2)
+            d = point_to_segment_km(lat, lon, la1, lo1, la2, lo2)
             if d < best_dist:
                 best_dist = d
                 best_name = corridor["name"]

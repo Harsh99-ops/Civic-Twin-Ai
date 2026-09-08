@@ -15,27 +15,11 @@ import re
 
 from modules.store import load_all
 from modules.sectors import resolve_sector
+from modules.geo_utils import point_to_segment_km
 
 ROUTE_BUFFER_KM = 0.35  # ~350m either side of the straight-line path
 
 COORD_RE = re.compile(r"^\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)\s*$")
-
-
-def _point_to_segment_km(lat, lon, lat1, lon1, lat2, lon2):
-    import math
-    lat0 = math.radians((lat1 + lat2) / 2)
-    kx = 111.32 * math.cos(lat0)
-    ky = 110.57
-    px, py = lon * kx, lat * ky
-    x1, y1 = lon1 * kx, lat1 * ky
-    x2, y2 = lon2 * kx, lat2 * ky
-    dx, dy = x2 - x1, y2 - y1
-    if dx == 0 and dy == 0:
-        return math.hypot(px - x1, py - y1)
-    t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)
-    t = max(0.0, min(1.0, t))
-    cx, cy = x1 + t * dx, y1 + t * dy
-    return math.hypot(px - cx, py - cy)
 
 
 def resolve_place(text: str):
@@ -81,7 +65,7 @@ def check_route(origin: str, destination: str) -> dict:
             lat, lon = float(r["latitude"]), float(r["longitude"])
         except (ValueError, TypeError):
             continue
-        dist = _point_to_segment_km(lat, lon, lat1, lon1, lat2, lon2)
+        dist = point_to_segment_km(lat, lon, lat1, lon1, lat2, lon2)
         if dist <= ROUTE_BUFFER_KM:
             matches.append({**r, "distance_from_route_m": round(dist * 1000, 1)})
 

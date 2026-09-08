@@ -16,6 +16,9 @@ Interactive API docs once running: http://localhost:8000/docs
 
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -27,7 +30,8 @@ from modules.road_classifier import classify_road
 from modules.risk_engine import predict_risk
 from modules.budget_optimizer import run_full_pipeline
 from modules.route_check import check_route
-from modules.chat import handle_chat_message
+from modules.llm_chat import chat_with_llm
+from modules.stats import compute_stats
 
 app = FastAPI(title="CIVIC-TWIN AI — Backend", version="1.0.0")
 
@@ -176,25 +180,7 @@ def prioritize(budget: float = 500000, top_n: int = 50):
 
 @app.get("/stats")
 def stats():
-    rows = store.load_all()
-    total = len(rows)
-    by_category = {}
-    by_severity = {}
-    by_road_type = {}
-    for r in rows:
-        by_category[r["complaint_category"]] = by_category.get(r["complaint_category"], 0) + 1
-        by_severity[r["severity"]] = by_severity.get(r["severity"], 0) + 1
-        by_road_type[r["road_type"]] = by_road_type.get(r["road_type"], 0) + 1
-
-    critical_high = sum(1 for r in rows if r["severity"] in ("Critical", "High"))
-
-    return {
-        "total_complaints": total,
-        "critical_or_high": critical_high,
-        "by_category": by_category,
-        "by_severity": by_severity,
-        "by_road_type": by_road_type,
-    }
+    return compute_stats()
 
 
 class RouteCheckRequest(BaseModel):
@@ -209,15 +195,21 @@ def route_check(req: RouteCheckRequest):
     return check_route(req.origin, req.destination)
 
 
+class ChatMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
-    message: str
+    messages: list[ChatMessage]
 
 
 @app.post("/chat")
 def chat(req: ChatRequest):
-    """Conversational front-end for route_check — parses free-text like
-    "from Sector 62 to Sector 18" and replies in natural language."""
-    return handle_chat_message(req.message)
+    """LLM-powered chat assistant with tool access to the live GIS/complaint
+    data — see modules/llm_chat.py. Accepts the full conversation history
+    (most recent message last) so the model has multi-turn context."""
+    return chat_with_llm([m.model_dump() for m in req.messages])
 
 
 @app.post("/admin/reset-seed")

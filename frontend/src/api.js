@@ -44,11 +44,11 @@ export function reportIssue({ latitude, longitude, category, file }) {
   return fetch(`${API_BASE}/report`, { method: "POST", body: form }).then(handle);
 }
 
-export function sendChatMessage(message) {
+export function sendChatMessage(messages) {
   return fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ messages }),
   }).then(handle);
 }
 

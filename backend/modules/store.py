@@ -124,3 +124,41 @@ def reset_to_seed():
     if os.path.exists(CSV_PATH):
         os.remove(CSV_PATH)
     _seed()
+
+
+SEVERITY_RANK = {"Low": 0, "Medium": 1, "High": 2, "Critical": 3}
+
+
+def search_complaints(category=None, road_type=None, min_severity=None,
+                       near_lat=None, near_lon=None, radius_km=1.5, limit=25) -> list:
+    """Flexible filter over the live store — backs the chat assistant's
+    search_complaints tool as well as any future filtered views."""
+    from modules.geo_utils import haversine_km
+
+    rows = load_all()
+    out = []
+    for r in rows:
+        if r.get("status") == "Resolved":
+            continue
+        if category and r.get("complaint_category") != category:
+            continue
+        if road_type and r.get("road_type") != road_type:
+            continue
+        if min_severity and SEVERITY_RANK.get(r.get("severity"), 0) < SEVERITY_RANK.get(min_severity, 0):
+            continue
+        if near_lat is not None and near_lon is not None:
+            try:
+                d = haversine_km(near_lat, near_lon, float(r["latitude"]), float(r["longitude"]))
+            except (ValueError, TypeError):
+                continue
+            if d > radius_km:
+                continue
+            r = {**r, "distance_km": round(d, 3)}
+        out.append(r)
+
+    if near_lat is not None and near_lon is not None:
+        out.sort(key=lambda r: r.get("distance_km", 0))
+    else:
+        out.sort(key=lambda r: SEVERITY_RANK.get(r.get("severity"), 0), reverse=True)
+
+    return out[:limit]
